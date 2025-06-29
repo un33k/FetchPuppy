@@ -1,0 +1,6 @@
+#!/bin/bash
+# Claudia (Claude-inspired Job Site Assistant) wrapper script
+# This prevents pyenv from creating shims for the Python implementation
+
+exec python3 "$(dirname "$0")/dev/claudia/cli/main.py" "$@"
+EOF < /dev/null
