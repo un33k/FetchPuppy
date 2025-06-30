@@ -231,11 +231,10 @@ install_deps() {
     
     log "JobSite dependencies installed successfully"
     
-    # Install Playwright browsers
-    log "Installing Playwright browsers..."
+    # Install Playwright browsers (Chrome only)
+    log "Installing Playwright Chrome browser..."
     playwright install chromium
-    playwright install firefox
-    log "Playwright browsers installed successfully"
+    log "Playwright Chrome browser installed successfully"
 }
 
 # Main execution
