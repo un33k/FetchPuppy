@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+data/resumes/*
 build/
 develop-eggs/
 dist/
@@ -67,6 +68,7 @@ data/exports/*.xlsx
 # Resume files (keep directory structure)
 data/resumes/*
 !data/resumes/.gitkeep
+!data/resumes/test_resume.txt
 
 # Temporary files
 *.tmp
@@ -75,6 +77,12 @@ data/resumes/*
 help_output.txt
 jobs_report.html
 scraped_jobs.json
+
+# Site tracking data
+data/tracked_sites.json
+
+# Resume profiles
+data/resume_profiles.json
 
 # Testing
 .pytest_cache/

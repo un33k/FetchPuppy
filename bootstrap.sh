@@ -227,7 +227,9 @@ install_deps() {
         "playwright>=1.40.0" \
         "scrapy>=2.11.0" \
         "selenium>=4.15.0" \
-        "webdriver-manager>=4.0.0"
+        "webdriver-manager>=4.0.0" \
+        "PyPDF2>=3.0.0" \
+        "python-docx>=1.1.0"
     
     log "JobSite dependencies installed successfully"
     

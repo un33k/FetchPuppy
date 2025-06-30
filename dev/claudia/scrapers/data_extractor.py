@@ -51,33 +51,248 @@ class DataExtractor:
             self.openai_client = openai.OpenAI(api_key=config.openai_api_key)
     
     async def extract_jobs_from_page(self, page: Page, analysis: PageAnalysis) -> List[Job]:
-        """Extract structured job data from a page"""
+        """Extract structured job data from a page by clicking into individual job details"""
         
         try:
-            # Get page content
-            html_content = await page.content()
-            page_url = page.url
+            # Step 1: Find job links on the listing page
+            job_links = await self._find_job_links(page, analysis)
+            if not job_links:
+                self.logger.warning("No job links found on page")
+                return []
             
-            # Extract jobs using AI if available
-            if self.claude_client or self.local_llm_client or self.openai_client:
-                jobs = await self._extract_with_ai(html_content, page_url, analysis)
-            else:
-                # Fallback to pattern-based extraction
-                jobs = await self._extract_with_patterns(page, analysis)
+            self.logger.info(f"Found {len(job_links)} job links to process")
             
-            # Clean and validate job data
-            cleaned_jobs = []
-            for job in jobs:
-                cleaned_job = self._clean_job_data(job, page_url)
-                if self._is_valid_job(cleaned_job):
-                    cleaned_jobs.append(cleaned_job)
+            # Step 2: Click into each job and extract detailed information
+            jobs = []
+            for i, link_info in enumerate(job_links[:10]):  # Limit to 10 jobs per page for performance
+                try:
+                    self.logger.info(f"Processing job {i+1}/{len(job_links[:10])}: {link_info.get('title', 'Unknown')}")
+                    
+                    job_data = await self._extract_job_details(page, link_info)
+                    if job_data:
+                        cleaned_job = self._clean_job_data(job_data, page.url)
+                        if self._is_valid_job(cleaned_job):
+                            jobs.append(cleaned_job)
+                            
+                except Exception as e:
+                    self.logger.warning(f"Failed to process job {i+1}: {e}")
+                    continue
             
-            self.logger.info(f"Extracted {len(cleaned_jobs)} valid jobs from page")
-            return cleaned_jobs
+            self.logger.info(f"Successfully extracted {len(jobs)} detailed jobs from page")
+            return jobs
             
         except Exception as e:
             self.logger.error(f"Error extracting jobs: {e}")
             return []
+    
+    async def _find_job_links(self, page: Page, analysis: PageAnalysis) -> List[Dict[str, Any]]:
+        """Find all job links on the current listing page"""
+        
+        try:
+            # Use AI to identify job links and their basic info
+            html_content = await page.content()
+            html_excerpt = self._truncate_html_for_extraction(html_content, 8000)
+            
+            prompt = f"""Analyze this job listing page and find all individual job links.
+            
+URL: {page.url}
+Page Type: {analysis.page_type}
+
+HTML Content:
+{html_excerpt}
+
+Extract a JSON array of job links with basic information visible on the listing page.
+For each job link found, return:
+{{
+    "title": "job title if visible",
+    "company": "company name if visible", 
+    "location": "location if visible",
+    "url": "full URL to job detail page",
+    "selector": "CSS selector to click this job link",
+    "summary": "brief description if visible on listing"
+}}
+
+Look for patterns like:
+- Links with text like "Apply", "View Job", "Learn More"
+- Job titles that are clickable links
+- Cards or boxes that contain job information and are clickable
+- URLs that contain job IDs or job-related paths
+
+Return ONLY a JSON array. If no job links found, return []."""
+
+            if self.claude_client:
+                response = self.claude_client.messages.create(
+                    model=self.config.claude_model,
+                    max_tokens=3000,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                response_text = response.content[0].text
+            elif self.local_llm_client:
+                response = self.local_llm_client.chat.completions.create(
+                    model=self.local_llm_model,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=2000,
+                    temperature=0.1
+                )
+                response_text = response.choices[0].message.content
+            elif self.openai_client:
+                response = self.openai_client.chat.completions.create(
+                    model="gpt-4-turbo-preview",
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=2000,
+                    temperature=0.1
+                )
+                response_text = response.choices[0].message.content
+            else:
+                return []
+            
+            # Parse AI response
+            job_links = self._parse_json_response(response_text)
+            if isinstance(job_links, list):
+                self.logger.info(f"AI found {len(job_links)} job links")
+                return job_links
+            
+            return []
+            
+        except Exception as e:
+            self.logger.error(f"Error finding job links: {e}")
+            return []
+    
+    async def _extract_job_details(self, page: Page, link_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Click on a job link and extract detailed information"""
+        
+        original_url = page.url
+        
+        try:
+            # Step 1: Click on the job link
+            if link_info.get('selector'):
+                # Try clicking with the AI-provided selector
+                await page.click(link_info['selector'])
+            elif link_info.get('url'):
+                # Navigate directly to the URL
+                await page.goto(link_info['url'])
+            else:
+                self.logger.warning("No selector or URL found for job link")
+                return None
+            
+            # Wait for job detail page to load
+            await page.wait_for_load_state('networkidle', timeout=10000)
+            
+            # Step 2: Extract detailed job information
+            detail_html = await page.content()
+            detail_html_excerpt = self._truncate_html_for_extraction(detail_html, 12000)
+            
+            prompt = f"""Extract detailed job information from this job posting page.
+
+URL: {page.url}
+Basic Info: {link_info}
+
+HTML Content:
+{detail_html_excerpt}
+
+Extract the following information and return as JSON:
+{{
+    "title": "exact job title",
+    "company": "company name",
+    "location": "job location", 
+    "remote": true/false,
+    "job_type": "full-time/part-time/contract/internship",
+    "salary_min": number_or_null,
+    "salary_max": number_or_null,
+    "salary_currency": "USD/EUR/etc",
+    "salary_period": "annual/hourly/monthly",
+    "description": "full job description",
+    "requirements": "job requirements and qualifications",
+    "benefits": "benefits and perks",
+    "skills_required": "list of required skills",
+    "experience_level": "entry/mid/senior/executive",
+    "experience_years_min": number_or_null,
+    "experience_years_max": number_or_null,
+    "url": "{page.url}",
+    "external_id": "job ID from URL or page",
+    "posted_date": "ISO date if available"
+}}
+
+Focus on extracting comprehensive information including salary, detailed requirements, and job description.
+Return ONLY valid JSON."""
+
+            if self.claude_client:
+                response = self.claude_client.messages.create(
+                    model=self.config.claude_model,
+                    max_tokens=4000,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                response_text = response.content[0].text
+            elif self.local_llm_client:
+                response = self.local_llm_client.chat.completions.create(
+                    model=self.local_llm_model,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=3000,
+                    temperature=0.1
+                )
+                response_text = response.choices[0].message.content
+            elif self.openai_client:
+                response = self.openai_client.chat.completions.create(
+                    model="gpt-4-turbo-preview",
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=3000,
+                    temperature=0.1
+                )
+                response_text = response.choices[0].message.content
+            else:
+                return None
+            
+            # Parse job details
+            job_data = self._parse_json_response(response_text)
+            
+            # Step 3: Navigate back to the listing page
+            await page.goto(original_url)
+            await page.wait_for_load_state('networkidle', timeout=10000)
+            
+            if isinstance(job_data, dict):
+                self.logger.info(f"Successfully extracted detailed job: {job_data.get('title', 'Unknown')}")
+                return job_data
+            
+            return None
+            
+        except Exception as e:
+            self.logger.warning(f"Error extracting job details: {e}")
+            # Always try to navigate back to original page
+            try:
+                await page.goto(original_url)
+                await page.wait_for_load_state('networkidle', timeout=5000)
+            except:
+                pass
+            return None
+    
+    def _parse_json_response(self, response_text: str) -> Any:
+        """Parse JSON from AI response"""
+        try:
+            # Try direct JSON parsing
+            return json.loads(response_text)
+        except json.JSONDecodeError:
+            # Look for JSON within the response
+            start = response_text.find('[')
+            end = response_text.rfind(']') + 1
+            
+            if start >= 0 and end > start:
+                try:
+                    return json.loads(response_text[start:end])
+                except json.JSONDecodeError:
+                    pass
+            
+            # Try object JSON
+            start = response_text.find('{')
+            end = response_text.rfind('}') + 1
+            
+            if start >= 0 and end > start:
+                try:
+                    return json.loads(response_text[start:end])
+                except json.JSONDecodeError:
+                    pass
+            
+            self.logger.warning("Could not parse JSON from AI response")
+            return None
     
     async def _extract_with_ai(self, html: str, url: str, analysis: PageAnalysis) -> List[Job]:
         """Extract job data using AI"""

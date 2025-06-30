@@ -65,10 +65,16 @@ def main() -> None:
             success = router.handle_analyze_command(args, remaining_args)
         elif args.command == "match":
             success = router.handle_match_command(args, remaining_args)
+        elif args.command == "search":
+            success = router.handle_search_command(args, remaining_args)
         elif args.command == "export":
             success = router.handle_export_command(args, remaining_args)
         elif args.command == "database":
             success = router.handle_database_command(args, remaining_args)
+        elif args.command == "sites":
+            success = router.handle_sites_command(args, remaining_args)
+        elif args.command == "resume":
+            success = router.handle_resume_command(args, remaining_args)
         elif args.command == "llm":
             success = router.handle_llm_command(args, remaining_args)
         elif args.command == "discover":

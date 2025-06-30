@@ -74,6 +74,12 @@ def show_examples():
     print(f"  {Colors.GREEN}./claudia match --company-size startup --industry tech{Colors.NC}")
     print()
     
+    print(f"{Colors.CYAN}Smart Search:{Colors.NC}")
+    print(f"  {Colors.GREEN}./claudia search --prompt \"search my resume against openai jobs, $450K+, Manager or Lead, AI related, infra, speech, etc. In SF or WA or Remote sort by best match, show top 10\"{Colors.NC}")
+    print(f"  {Colors.GREEN}./claudia search --prompt \"find AI engineering roles at Google, remote OK, senior level\"{Colors.NC}")
+    print(f"  {Colors.GREEN}./claudia search --prompt \"machine learning manager positions, $300K+, San Francisco\" --top 5{Colors.NC}")
+    print()
+    
     print(f"{Colors.CYAN}Data Export:{Colors.NC}")
     print(f"  {Colors.GREEN}./claudia export --format csv --filter remote{Colors.NC}")
     print(f"  {Colors.GREEN}./claudia export --format json --salary 80k+{Colors.NC}")
@@ -94,6 +100,18 @@ def show_examples():
     print(f"  {Colors.GREEN}./claudia llm --ping --local --hello{Colors.NC}")
     print()
     
+    print(f"{Colors.CYAN}Site Management:{Colors.NC}")
+    print(f"  {Colors.GREEN}./claudia sites --add https://openai.com/careers/search/{Colors.NC}")
+    print(f"  {Colors.GREEN}./claudia sites --list{Colors.NC}")
+    print(f"  {Colors.GREEN}./claudia sites --remove https://example.com/careers{Colors.NC}")
+    print()
+    
+    print(f"{Colors.CYAN}Resume Management:{Colors.NC}")
+    print(f"  {Colors.GREEN}./claudia resume --upload ~/Documents/resume.pdf{Colors.NC}")
+    print(f"  {Colors.GREEN}./claudia resume --list-resumes{Colors.NC}")
+    print(f"  {Colors.GREEN}./claudia resume --show-resume{Colors.NC}")
+    print()
+    
     print(f"{Colors.CYAN}Development:{Colors.NC}")
     print(f"  {Colors.GREEN}./claudia dev validate{Colors.NC}")
     print(f"  {Colors.GREEN}./claudia dev test{Colors.NC}")
@@ -106,8 +124,10 @@ def show_quick_help():
     print()
     print(f"{Colors.YELLOW}Quick Commands:{Colors.NC}")
     print(f"  {Colors.GREEN}./claudia scrape [site] [query]{Colors.NC}     - Scrape jobs")
+    print(f"  {Colors.GREEN}./claudia search --prompt [query]{Colors.NC}   - Smart AI search")
     print(f"  {Colors.GREEN}./claudia match [criteria]{Colors.NC}          - Find matching jobs") 
     print(f"  {Colors.GREEN}./claudia analyze resume [file]{Colors.NC}     - Analyze resume")
+    print(f"  {Colors.GREEN}./claudia resume --upload [file]{Colors.NC}    - Upload resume")
     print(f"  {Colors.GREEN}./claudia export [format]{Colors.NC}           - Export data")
     print(f"  {Colors.GREEN}./claudia --help{Colors.NC}                    - Full help")
     print(f"  {Colors.GREEN}./claudia --examples{Colors.NC}                - Usage examples")

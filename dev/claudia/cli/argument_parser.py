@@ -53,7 +53,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "command",
         nargs="?",
-        choices=["scrape", "analyze", "match", "export", "database", "llm", "discover", "dev"],
+        choices=["scrape", "analyze", "match", "search", "export", "database", "sites", "resume", "llm", "discover", "dev"],
         help="Main command to execute"
     )
     
@@ -276,6 +276,67 @@ def create_parser() -> argparse.ArgumentParser:
         "--hello",
         action="store_true",
         help="Send a friendly hello message to test conversation"
+    )
+
+    # Sites management options
+    sites_group = parser.add_argument_group("sites management options")
+    sites_group.add_argument(
+        "--add",
+        type=str,
+        help="Add a new career site to track"
+    )
+    
+    sites_group.add_argument(
+        "--remove",
+        type=str,
+        help="Remove a career site from tracking"
+    )
+    
+    sites_group.add_argument(
+        "--list",
+        action="store_true",
+        help="List all tracked career sites"
+    )
+    
+    sites_group.add_argument(
+        "--name",
+        type=str,
+        help="Custom name for the site (use with --add)"
+    )
+
+    # Resume management options
+    resume_group = parser.add_argument_group("resume management options")
+    resume_group.add_argument(
+        "--upload",
+        type=str,
+        help="Upload and analyze a resume file (PDF, DOCX, TXT)"
+    )
+    
+    resume_group.add_argument(
+        "--list-resumes",
+        action="store_true",
+        help="List all uploaded resumes"
+    )
+    
+    resume_group.add_argument(
+        "--show-resume",
+        action="store_true",
+        help="Show details of the active resume"
+    )
+
+    # Smart search options
+    search_group = parser.add_argument_group("smart search options")
+    search_group.add_argument(
+        "--prompt",
+        type=str,
+        help="Natural language search prompt describing what you're looking for"
+    )
+    
+    search_group.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="Number of top matches to show (default: 10)"
     )
 
     return parser

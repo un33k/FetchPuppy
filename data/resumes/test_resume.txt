@@ -1,0 +1,18 @@
+Test Resume - John Doe
+Software Engineer
+
+This is a test resume file for development purposes.
+It contains no real personal information.
+
+Skills:
+- Python
+- JavaScript
+- React
+- Node.js
+
+Experience:
+- Software Engineer at Test Company (2020-2024)
+- Junior Developer at Demo Corp (2018-2020)
+
+Education:
+- B.S. Computer Science, Test University (2018)

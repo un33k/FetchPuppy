@@ -210,6 +210,77 @@ class CommandRouter:
         print(error(f"Unknown analysis type: {args.subcommand}"))
         return False
     
+    def handle_search_command(self, args, remaining_args) -> bool:
+        """Handle smart search commands with natural language prompts"""
+        if not args.prompt:
+            print(error("Search prompt required"))
+            print("Example: ./claudia search --prompt \"search my resume against openai jobs, $450K+, Manager or Lead, AI related, infra, speech, etc. In SF or WA or Remote sort by best match, show top 10\"")
+            return False
+        
+        print(info(f"Smart searching with AI analysis..."))
+        print(f"Prompt: {args.prompt}")
+        print(f"Top results: {args.limit}")
+        print()
+        
+        try:
+            from utils.smart_search import SmartSearcher
+            searcher = SmartSearcher(self.config)
+            
+            # Perform AI-powered search
+            results = searcher.search_with_prompt(args.prompt, top_k=args.limit)
+            
+            if not results:
+                print(warning("No matching jobs found"))
+                print("Try:")
+                print("  • Scraping more job sites with ./claudia scrape")
+                print("  • Using broader search terms")
+                print("  • Adjusting salary or location requirements")
+                return True
+            
+            print(success(f"Found {len(results)} matching jobs:"))
+            print()
+            
+            # Display results with AI analysis
+            for i, result in enumerate(results, 1):
+                job = result['job']
+                score = result['score']
+                reasons = result['match_reasons']
+                concerns = result['concerns']
+                
+                print(f"{Colors.CYAN}{i}. {job['title']} at {job['company']}{Colors.NC}")
+                print(f"   📍 {job['location']} | {'🏠 Remote' if job['remote'] else '🏢 On-site'}")
+                
+                if job['salary_min'] or job['salary_max']:
+                    salary_min = f"${job['salary_min']:,}" if job['salary_min'] else "TBD"
+                    salary_max = f" - ${job['salary_max']:,}" if job['salary_max'] else ""
+                    print(f"   💰 {salary_min}{salary_max}")
+                
+                print(f"   🎯 Match Score: {score:.1f}/10")
+                
+                if reasons:
+                    print(f"   ✅ Why it matches: {reasons}")
+                
+                if concerns:
+                    print(f"   ⚠️  Potential concerns: {concerns}")
+                
+                if job['url']:
+                    print(f"   🔗 {job['url']}")
+                
+                print()
+            
+            return True
+            
+        except ImportError as e:
+            print(error(f"Smart search module not found: {e}"))
+            print("This feature requires AI analysis capabilities")
+            return False
+        except Exception as e:
+            print(error(f"Smart search failed: {e}"))
+            if args.verbose:
+                import traceback
+                traceback.print_exc()
+            return False
+    
     def handle_match_command(self, args, remaining_args) -> bool:
         """Handle job matching commands"""
         print(info("Finding job matches..."))
@@ -317,6 +388,172 @@ class CommandRouter:
             return False
         except Exception as e:
             print(error(f"LLM testing failed: {e}"))
+            return False
+    
+    def handle_resume_command(self, args, remaining_args) -> bool:
+        """Handle resume management commands"""
+        try:
+            from utils.resume_manager import ResumeManager
+            resume_manager = ResumeManager(self.config)
+            
+            if args.upload:
+                # Upload new resume
+                file_path = args.upload
+                print(info(f"Uploading resume: {file_path}"))
+                
+                profile = resume_manager.upload_resume(file_path, analyze=True)
+                if profile:
+                    print(success(f"✓ Resume uploaded and analyzed: {profile.file_name}"))
+                    print(f"  Skills found: {len(profile.skills)}")
+                    print(f"  Experience: {profile.experience_years or 'Not specified'} years")
+                    print(f"  Education: {len(profile.education)} degrees/certifications")
+                    print(f"  Previous roles: {len(profile.previous_roles)}")
+                    if profile.summary:
+                        print(f"  Summary: {profile.summary[:100]}...")
+                    return True
+                else:
+                    print(error("✗ Failed to upload resume"))
+                    return False
+            
+            elif args.list_resumes:
+                # List all resumes
+                profiles = resume_manager.list_resumes()
+                if not profiles:
+                    print(warning("No resumes uploaded yet"))
+                    print("Upload with: ./claudia resume --upload /path/to/resume.pdf")
+                    return True
+                
+                print(info("Uploaded Resumes:"))
+                for i, profile in enumerate(profiles, 1):
+                    upload_date = profile.uploaded_date.split('T')[0]
+                    print(f"  {i}. {profile.file_name}")
+                    print(f"     Uploaded: {upload_date}")
+                    print(f"     Skills: {len(profile.skills)} identified")
+                    print(f"     Experience: {profile.experience_years or 'Unknown'} years")
+                    if profile.skills:
+                        skills_preview = ", ".join(profile.skills[:5])
+                        if len(profile.skills) > 5:
+                            skills_preview += f" (+{len(profile.skills)-5} more)"
+                        print(f"     Top skills: {skills_preview}")
+                    print()
+                return True
+            
+            elif args.show_resume:
+                # Show active resume details
+                profile = resume_manager.get_active_resume()
+                if not profile:
+                    print(warning("No resume uploaded yet"))
+                    return True
+                
+                print(info(f"Active Resume: {profile.file_name}"))
+                print(f"Uploaded: {profile.uploaded_date.split('T')[0]}")
+                print()
+                
+                if profile.summary:
+                    print(f"📄 Summary:")
+                    print(f"   {profile.summary}")
+                    print()
+                
+                if profile.skills:
+                    print(f"🛠️  Skills ({len(profile.skills)}):")
+                    for skill in profile.skills:
+                        print(f"   • {skill}")
+                    print()
+                
+                if profile.previous_roles:
+                    print(f"💼 Previous Roles ({len(profile.previous_roles)}):")
+                    for role in profile.previous_roles[:5]:  # Show first 5
+                        duration = role.get('duration', 'Unknown duration')
+                        print(f"   • {role.get('title', 'Unknown')} at {role.get('company', 'Unknown')} ({duration})")
+                    print()
+                
+                if profile.education:
+                    print(f"🎓 Education:")
+                    for edu in profile.education:
+                        print(f"   • {edu}")
+                    print()
+                
+                print(f"🌍 Location Preferences: {', '.join(profile.location_preferences) or 'Not specified'}")
+                print(f"🏠 Remote Work: {'Preferred' if profile.remote_preference else 'Not specified'}")
+                
+                return True
+            
+            else:
+                print(error("Resume command required"))
+                print("Available: --upload, --list-resumes, --show-resume")
+                print("Examples:")
+                print("  ./claudia resume --upload ~/Documents/resume.pdf")
+                print("  ./claudia resume --list-resumes")
+                print("  ./claudia resume --show-resume")
+                return False
+                
+        except ImportError as e:
+            print(error(f"Resume management module not found: {e}"))
+            return False
+        except Exception as e:
+            print(error(f"Resume management failed: {e}"))
+            return False
+    
+    def handle_sites_command(self, args, remaining_args) -> bool:
+        """Handle site management commands"""
+        try:
+            from utils.site_manager import SiteManager
+            site_manager = SiteManager(self.config)
+            
+            if args.add:
+                # Add new site
+                url = args.add
+                name = getattr(args, 'name', None)
+                if site_manager.add_site(url, name):
+                    print(success(f"✓ Added site: {url}"))
+                    return True
+                else:
+                    print(error(f"✗ Failed to add site: {url}"))
+                    return False
+            
+            elif args.remove:
+                # Remove site
+                if site_manager.remove_site(args.remove):
+                    print(success(f"✓ Removed site: {args.remove}"))
+                    return True
+                else:
+                    print(error(f"✗ Failed to remove site: {args.remove}"))
+                    return False
+            
+            elif args.list:
+                # List all sites
+                sites = site_manager.list_sites()
+                if not sites:
+                    print(warning("No sites tracked yet"))
+                    print("Add sites with: ./claudia sites --add <url>")
+                    return True
+                
+                print(info("Tracked Career Sites:"))
+                for i, site in enumerate(sites, 1):
+                    status = "🟢 Active" if site.active else "🔴 Inactive"
+                    last_scraped = site.last_scraped.split('T')[0] if site.last_scraped else "Never"
+                    print(f"  {i}. {site.name}")
+                    print(f"     URL: {site.url}")
+                    print(f"     Status: {status}")
+                    print(f"     Jobs Found: {site.jobs_found}")
+                    print(f"     Last Scraped: {last_scraped}")
+                    print()
+                return True
+            
+            else:
+                print(error("Sites command required"))
+                print("Available: --add, --remove, --list")
+                print("Examples:")
+                print("  ./claudia sites --add https://openai.com/careers/search/")
+                print("  ./claudia sites --list")
+                print("  ./claudia sites --remove https://example.com/careers")
+                return False
+                
+        except ImportError as e:
+            print(error(f"Site management module not found: {e}"))
+            return False
+        except Exception as e:
+            print(error(f"Site management failed: {e}"))
             return False
     
     def handle_database_command(self, args, remaining_args) -> bool:
