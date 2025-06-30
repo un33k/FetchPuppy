@@ -73,6 +73,8 @@ data/resumes/*
 *.temp
 .tmp/
 help_output.txt
+jobs_report.html
+scraped_jobs.json
 
 # Testing
 .pytest_cache/
