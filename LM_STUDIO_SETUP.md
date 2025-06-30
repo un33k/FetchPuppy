@@ -76,15 +76,22 @@ For job scraping, these models offer the best balance of speed, accuracy, and si
 ## 🧪 **Step 6: Test Your Setup**
 
 1. **Ensure LM Studio server is running**
-2. **Test the scraper**:
+2. **Test basic connectivity**:
    ```bash
    source .venv/bin/activate
-   ./claudia discover example.com
+   ./claudia llm --ping --local
    ```
 
-3. **Look for this log message**:
+3. **Test with friendly conversation**:
+   ```bash
+   ./claudia llm --ping --local --hello
    ```
-   Local LLM client initialized: http://localhost:1234/v1
+
+4. **Look for successful connection message**:
+   ```
+   ✓ Local LLM connection successful!
+   🤖 AI Response:
+      Nice to meet you! I'm an AI designed to be your go-to companion...
    ```
 
 ## 🎯 **Usage Examples**
@@ -92,6 +99,9 @@ For job scraping, these models offer the best balance of speed, accuracy, and si
 Once configured, use JobSite normally - it will automatically use your local LLM:
 
 ```bash
+# Test your local AI first
+./claudia llm --ping --local --hello
+
 # Scrape with local AI (completely private!)
 ./claudia scrape universal "python developer" --site indeed.com
 

@@ -72,6 +72,7 @@ data/resumes/*
 *.tmp
 *.temp
 .tmp/
+help_output.txt
 
 # Testing
 .pytest_cache/

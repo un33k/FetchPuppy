@@ -13,6 +13,11 @@ Test your AI provider connections and diagnose issues with JobSite's built-in LL
 ./claudia llm --ping --claude   # Claude API
 ./claudia llm --ping --openai   # OpenAI API
 
+# Test with friendly conversation (--hello mode)
+./claudia llm --ping --local --hello    # Get AI introduction
+./claudia llm --ping --claude --hello   # Conversational test
+./claudia llm --ping --all --hello      # Hello to all providers
+
 # Get help
 ./claudia llm --help
 ```
@@ -178,6 +183,51 @@ To configure: set OPENAI_API_KEY in .env
 ```
 **Fix:** Verify your API key is correct and account has credits.
 
+## 👋 **Hello Mode - Friendly Conversation Test**
+
+Use `--hello` with any ping command to test conversational capabilities:
+
+### **Example: Local LLM Hello**
+```bash
+./claudia llm --ping --local --hello
+```
+
+**Output:**
+```
+Testing local LLM connectivity...
+  URL: http://localhost:11434/v1
+  Model: llama3.1:latest
+✓ Local LLM connection successful!
+  🤖 AI Response:
+     Nice to meet you! I'm an AI designed to be your go-to companion for all sorts 
+     of questions, topics, and tasks. My name is LLaMA, but feel free to call me 
+     anything you like.
+
+     I'm a large language model, which means I can understand and respond to natural 
+     language in a way that's similar to how humans communicate. I've been trained 
+     on a massive dataset of text from the internet, books, and other sources.
+
+     What does this mean for you? Well, I can help with:
+     * Answering questions on just about any topic
+     * Generating ideas and creative content
+     * Helping with analysis and problem-solving
+     * And much more!
+  Response time: 2200ms
+  Model: llama3.1:latest
+```
+
+### **When to Use Hello Mode:**
+- **🤖 Test conversation quality** - See how well the AI communicates
+- **⚡ Check response time** - Longer responses show real performance
+- **🧠 Verify model personality** - Each AI has different characteristics
+- **🎯 Ensure non-streaming** - Tests complete response delivery
+
+### **Hello vs Regular Ping:**
+| Mode | Prompt | Response | Use Case |
+|------|--------|----------|----------|
+| **Regular** | "Say 'OK' if you can hear me." | "OK" (fast) | Quick connectivity test |
+| **Hello** | "Please introduce yourself..." | Full conversation (detailed) | Quality & personality test |
+
 ## 🔧 **Configuration Setup**
 
 ### **1. Copy Environment Template**
@@ -319,13 +369,55 @@ source .venv/bin/activate
 ./claudia llm --ping --all
 ```
 
+## 📚 **Complete Command Reference**
+
+### **Basic Connectivity Tests**
+```bash
+./claudia llm --ping --local       # Test local LLM only
+./claudia llm --ping --claude      # Test Claude API only  
+./claudia llm --ping --openai      # Test OpenAI API only
+./claudia llm --ping --all         # Test all providers
+```
+
+### **Conversation Tests (Hello Mode)**
+```bash
+./claudia llm --ping --local --hello    # Local LLM conversation
+./claudia llm --ping --claude --hello   # Claude conversation
+./claudia llm --ping --openai --hello   # OpenAI conversation  
+./claudia llm --ping --all --hello      # All providers conversation
+```
+
+### **Getting Help**
+```bash
+./claudia llm                      # Show LLM command help
+./claudia llm --help               # Full LLM help documentation
+./claudia --help                   # Complete Claudia help
+./claudia --examples               # Usage examples
+```
+
+### **Example Workflow**
+```bash
+# 1. Test everything with conversation
+./claudia llm --ping --all --hello
+
+# 2. If local LLM works, test job scraping
+./claudia scrape universal "test job" --site indeed.com --max-results 2
+
+# 3. Check what jobs were found
+./claudia export --format json
+
+# 4. Ready for real job searching!
+./claudia scrape universal "your dream job" --site your-favorite-site.com
+```
+
 ## 💡 **Pro Tips**
 
-1. **Start with `--all`** to get a complete overview
+1. **Start with `--hello`** to test conversation quality and performance
 2. **Use local LLM** for privacy and cost savings
 3. **Claude gives best results** for job scraping
 4. **OpenAI is reliable** as a fallback option
 5. **Test regularly** to catch API key expiration
 6. **Check response times** to optimize performance
+7. **Hello mode shows personality** - see how each AI communicates differently
 
 Need help? Check `./claudia --help` or `./claudia --examples` for more information!

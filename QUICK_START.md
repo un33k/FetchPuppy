@@ -46,6 +46,10 @@ cp .env.example .env
 ./claudia llm --ping --local    # Local LLM (LM Studio)
 ./claudia llm --ping --claude   # Claude API
 ./claudia llm --ping --openai   # OpenAI API
+
+# Test with friendly conversation (recommended!)
+./claudia llm --ping --local --hello    # See AI personality & quality
+./claudia llm --ping --all --hello      # Test all with conversation
 ```
 
 ### **Database Setup**
@@ -121,9 +125,9 @@ echo "OPENAI_API_KEY=your_openai_key_here" >> .env
 ### **Check Everything is Working**
 ```bash
 # Complete system check
-./claudia llm --ping --all       # AI connectivity
-./claudia database --stats       # Database status
-./claudia export --format json   # Data export
+./claudia llm --ping --all --hello  # AI connectivity + conversation test
+./claudia database --stats          # Database status
+./claudia export --format json      # Data export
 ```
 
 ## 🆘 **Troubleshooting**
@@ -178,7 +182,7 @@ Once everything is working:
 
 You'll know everything is working when:
 
-- ✅ `./claudia llm --ping --all` shows at least one provider connected
+- ✅ `./claudia llm --ping --all --hello` shows at least one provider with friendly response
 - ✅ `./claudia database --stats` shows database initialized  
 - ✅ `./claudia scrape universal "test" --site indeed.com` finds some jobs
 - ✅ `./claudia export --format json` creates an export file

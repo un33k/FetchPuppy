@@ -33,6 +33,8 @@ JobSite is a job scraping and AI-powered analysis platform that helps users find
 - `./claudia llm --ping --local` - Test LM Studio local LLM connection
 - `./claudia llm --ping --claude` - Test Claude API connection and response
 - `./claudia llm --ping --openai` - Test OpenAI API connection and response
+- `./claudia llm --ping --local --hello` - Test with friendly conversation mode
+- `./claudia llm --ping --all --hello` - Conversational test for all providers
 
 ## Architecture Overview
 

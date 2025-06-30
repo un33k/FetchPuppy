@@ -29,7 +29,7 @@ def create_parser() -> argparse.ArgumentParser:
   {Colors.GREEN}./claudia match --salary 100k --location remote --skills python,ai{Colors.NC}
   {Colors.GREEN}./claudia export --format csv --filter remote{Colors.NC}
   {Colors.GREEN}./claudia database --init{Colors.NC}
-  {Colors.GREEN}./claudia llm --ping --all{Colors.NC}
+  {Colors.GREEN}./claudia llm --ping --all --hello{Colors.NC}
 
 {Colors.YELLOW}Universal Scraper:{Colors.NC}
   • Works with any job site using AI navigation
@@ -270,6 +270,12 @@ def create_parser() -> argparse.ArgumentParser:
         "--all",
         action="store_true",
         help="Test all configured AI providers"
+    )
+    
+    llm_group.add_argument(
+        "--hello",
+        action="store_true",
+        help="Send a friendly hello message to test conversation"
     )
 
     return parser

@@ -290,20 +290,24 @@ class CommandRouter:
             print("  ./claudia llm --ping --claude")
             print("  ./claudia llm --ping --openai")
             print("  ./claudia llm --ping --all")
+            print("  ./claudia llm --ping --local --hello")
             return False
         
         try:
             from utils.llm_tester import LLMTester
             tester = LLMTester(self.config)
             
+            # Check if hello mode is enabled
+            hello_mode = getattr(args, 'hello', False)
+            
             if args.local:
-                return tester.ping_local_llm()
+                return tester.ping_local_llm(hello_mode=hello_mode)
             elif args.claude:
-                return tester.ping_claude()
+                return tester.ping_claude(hello_mode=hello_mode)
             elif args.openai:
-                return tester.ping_openai()
+                return tester.ping_openai(hello_mode=hello_mode)
             elif args.all:
-                return tester.ping_all()
+                return tester.ping_all(hello_mode=hello_mode)
             else:
                 print(error("Provider required: --local, --claude, --openai, or --all"))
                 return False

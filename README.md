@@ -89,6 +89,7 @@ cp .env.example .env
 ./claudia llm --ping --local       # Test local LLM (LM Studio)
 ./claudia llm --ping --claude      # Test Claude API
 ./claudia llm --ping --openai      # Test OpenAI API
+./claudia llm --ping --local --hello  # Friendly conversation test
 ```
 
 ### Development
@@ -206,8 +207,8 @@ JobSite supports three AI options (in order of preference):
 
 **Quick AI Setup:**
 ```bash
-# Test all providers
-./claudia llm --ping --all
+# Test all providers with conversation
+./claudia llm --ping --all --hello
 
 # Setup local LLM (private, free)
 # Follow LM_STUDIO_SETUP.md

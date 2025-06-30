@@ -18,7 +18,7 @@ class LLMTester:
         self.config = config
         self.logger = logging.getLogger(__name__)
     
-    def ping_local_llm(self) -> bool:
+    def ping_local_llm(self, hello_mode: bool = False) -> bool:
         """Test local LLM connectivity via LM Studio"""
         print(info("Testing local LLM connectivity..."))
         
@@ -37,13 +37,22 @@ class LLMTester:
                 api_key=self.config.local_llm_api_key
             )
             
-            # Test basic connectivity with a simple prompt
+            # Choose prompt based on mode
+            if hello_mode:
+                prompt = "Hello! Please introduce yourself and tell me a little about what you can help with. Keep it friendly and conversational."
+                max_tokens = 150
+            else:
+                prompt = "Say 'OK' if you can hear me."
+                max_tokens = 10
+            
+            # Test connectivity with chosen prompt
             start_time = time.time()
             response = client.chat.completions.create(
                 model=self.config.local_llm_model,
-                messages=[{"role": "user", "content": "Say 'OK' if you can hear me."}],
-                max_tokens=10,
-                temperature=0.1
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=max_tokens,
+                temperature=0.1,
+                stream=False  # Ensure non-streaming response
             )
             end_time = time.time()
             
@@ -51,7 +60,19 @@ class LLMTester:
             response_time = round((end_time - start_time) * 1000)
             
             print(success("✓ Local LLM connection successful!"))
-            print(f"  Response: {response_text}")
+            
+            if hello_mode:
+                print(f"  🤖 AI Response:")
+                # Pretty print the response with proper wrapping
+                lines = response_text.split('\n')
+                for line in lines:
+                    if line.strip():
+                        print(f"     {line}")
+                    else:
+                        print()
+            else:
+                print(f"  Response: {response_text}")
+                
             print(f"  Response time: {response_time}ms")
             print(f"  Model: {response.model}")
             
@@ -70,7 +91,7 @@ class LLMTester:
             print(f"  4. Check URL: {self.config.local_llm_base_url}")
             return False
     
-    def ping_claude(self) -> bool:
+    def ping_claude(self, hello_mode: bool = False) -> bool:
         """Test Claude API connectivity"""
         print(info("Testing Claude API connectivity..."))
         
@@ -87,11 +108,19 @@ class LLMTester:
             import anthropic
             client = anthropic.Anthropic(api_key=self.config.claude_api_key)
             
+            # Choose prompt based on mode
+            if hello_mode:
+                prompt = "Hello! Please introduce yourself and tell me a little about what you can help with. Keep it friendly and conversational."
+                max_tokens = 150
+            else:
+                prompt = "Say 'OK' if you can hear me."
+                max_tokens = 10
+            
             start_time = time.time()
             response = client.messages.create(
                 model=self.config.claude_model,
-                max_tokens=10,
-                messages=[{"role": "user", "content": "Say 'OK' if you can hear me."}]
+                max_tokens=max_tokens,
+                messages=[{"role": "user", "content": prompt}]
             )
             end_time = time.time()
             
@@ -99,7 +128,19 @@ class LLMTester:
             response_time = round((end_time - start_time) * 1000)
             
             print(success("✓ Claude API connection successful!"))
-            print(f"  Response: {response_text}")
+            
+            if hello_mode:
+                print(f"  🤖 AI Response:")
+                # Pretty print the response with proper wrapping
+                lines = response_text.split('\n')
+                for line in lines:
+                    if line.strip():
+                        print(f"     {line}")
+                    else:
+                        print()
+            else:
+                print(f"  Response: {response_text}")
+                
             print(f"  Response time: {response_time}ms")
             print(f"  Model: {response.model}")
             print(f"  Usage: {response.usage.input_tokens} in, {response.usage.output_tokens} out")
@@ -119,7 +160,7 @@ class LLMTester:
             print("  4. Get API key: https://console.anthropic.com/")
             return False
     
-    def ping_openai(self) -> bool:
+    def ping_openai(self, hello_mode: bool = False) -> bool:
         """Test OpenAI API connectivity"""
         print(info("Testing OpenAI API connectivity..."))
         
@@ -136,12 +177,21 @@ class LLMTester:
             import openai
             client = openai.OpenAI(api_key=self.config.openai_api_key)
             
+            # Choose prompt based on mode
+            if hello_mode:
+                prompt = "Hello! Please introduce yourself and tell me a little about what you can help with. Keep it friendly and conversational."
+                max_tokens = 150
+            else:
+                prompt = "Say 'OK' if you can hear me."
+                max_tokens = 10
+            
             start_time = time.time()
             response = client.chat.completions.create(
                 model=self.config.openai_model,
-                messages=[{"role": "user", "content": "Say 'OK' if you can hear me."}],
-                max_tokens=10,
-                temperature=0.1
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=max_tokens,
+                temperature=0.1,
+                stream=False  # Ensure non-streaming response
             )
             end_time = time.time()
             
@@ -149,7 +199,19 @@ class LLMTester:
             response_time = round((end_time - start_time) * 1000)
             
             print(success("✓ OpenAI API connection successful!"))
-            print(f"  Response: {response_text}")
+            
+            if hello_mode:
+                print(f"  🤖 AI Response:")
+                # Pretty print the response with proper wrapping
+                lines = response_text.split('\n')
+                for line in lines:
+                    if line.strip():
+                        print(f"     {line}")
+                    else:
+                        print()
+            else:
+                print(f"  Response: {response_text}")
+                
             print(f"  Response time: {response_time}ms")
             print(f"  Model: {response.model}")
             print(f"  Usage: {response.usage.prompt_tokens} in, {response.usage.completion_tokens} out")
@@ -169,7 +231,7 @@ class LLMTester:
             print("  4. Get API key: https://platform.openai.com/api-keys")
             return False
     
-    def ping_all(self) -> bool:
+    def ping_all(self, hello_mode: bool = False) -> bool:
         """Test all configured AI providers"""
         print(info("Testing all AI provider connections...\n"))
         
@@ -177,17 +239,17 @@ class LLMTester:
         
         # Test Claude
         print("=" * 50)
-        results['claude'] = self.ping_claude()
+        results['claude'] = self.ping_claude(hello_mode=hello_mode)
         print()
         
         # Test OpenAI
         print("=" * 50)
-        results['openai'] = self.ping_openai()
+        results['openai'] = self.ping_openai(hello_mode=hello_mode)
         print()
         
         # Test Local LLM
         print("=" * 50)
-        results['local'] = self.ping_local_llm()
+        results['local'] = self.ping_local_llm(hello_mode=hello_mode)
         print()
         
         # Summary

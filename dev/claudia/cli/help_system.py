@@ -91,6 +91,7 @@ def show_examples():
     print(f"  {Colors.GREEN}./claudia llm --ping --local{Colors.NC}")
     print(f"  {Colors.GREEN}./claudia llm --ping --claude{Colors.NC}")
     print(f"  {Colors.GREEN}./claudia llm --ping --openai{Colors.NC}")
+    print(f"  {Colors.GREEN}./claudia llm --ping --local --hello{Colors.NC}")
     print()
     
     print(f"{Colors.CYAN}Development:{Colors.NC}")
